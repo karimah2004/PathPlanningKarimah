@@ -7,8 +7,7 @@
 #include <path_planning/utils/math_helpers.h>
 #include <path_planning/utils/graph_utils.h>
 
-
-bool isLoaded(const GridGraph& graph)
+bool isLoaded(const GridGraph &graph)
 {
     bool correct_size = graph.cell_odds.size() == graph.width * graph.height;
     bool positive_size = graph.width > 0 && graph.height > 0;
@@ -16,8 +15,7 @@ bool isLoaded(const GridGraph& graph)
     return correct_size && positive_size && positive_m_per_cell;
 }
 
-
-bool loadFromFile(const std::string& file_path, GridGraph& graph)
+bool loadFromFile(const std::string &file_path, GridGraph &graph)
 {
     std::ifstream in(file_path);
     if (!in.is_open())
@@ -45,7 +43,7 @@ bool loadFromFile(const std::string& file_path, GridGraph& graph)
     graph.obstacle_distances = std::vector<float>(graph.width * graph.height, 0);
 
     // Read in each cell value
-    int odds;  // read in as an int so it doesn't convert the number to the corresponding ASCII code
+    int odds; // read in as an int so it doesn't convert the number to the corresponding ASCII code
     for (int idx = 0; idx < num_cells; ++idx)
     {
         in >> odds;
@@ -58,7 +56,7 @@ bool loadFromFile(const std::string& file_path, GridGraph& graph)
     return true;
 };
 
-std::string mapAsString(GridGraph& graph)
+std::string mapAsString(GridGraph &graph)
 {
     std::ostringstream oss;
     // Header data.
@@ -77,7 +75,7 @@ std::string mapAsString(GridGraph& graph)
     return oss.str();
 }
 
-void initGraph(GridGraph& graph)
+void initGraph(GridGraph &graph)
 {
     /**
      * TODO (P3): Initialize your graph nodes.
@@ -87,16 +85,26 @@ void initGraph(GridGraph& graph)
      * odds values. You should use this information to initialize your added
      * values, like the distances and the nodes.
      */
+
+    /*calculate total number of cells in the graph*/
+    int num_cells = graph.width * graph.height;
+    /*clear any existing node data and resize the array to fit the number of cells  */
+    graph.nodes.clear();
+    graph.nodes.resize(num_cells);
+
+    /*initialize each node based on data given in the struct*/
+    for (int i = 0; i < num_cells; i++)
+    {
+        graph.nodes[i] = CellNode();
+    }
 }
 
-
-int cellToIdx(int i, int j, const GridGraph& graph)
+int cellToIdx(int i, int j, const GridGraph &graph)
 {
     return i + j * graph.width;
 }
 
-
-Cell idxToCell(int idx, const GridGraph& graph)
+Cell idxToCell(int idx, const GridGraph &graph)
 {
     Cell c;
     c.i = idx % graph.width;
@@ -104,8 +112,7 @@ Cell idxToCell(int idx, const GridGraph& graph)
     return c;
 }
 
-
-Cell posToCell(float x, float y, const GridGraph& graph)
+Cell posToCell(float x, float y, const GridGraph &graph)
 {
     int i = static_cast<int>(floor((x - graph.origin_x) / graph.meters_per_cell));
     int j = static_cast<int>(floor((y - graph.origin_y) / graph.meters_per_cell));
@@ -116,8 +123,7 @@ Cell posToCell(float x, float y, const GridGraph& graph)
     return c;
 }
 
-
-std::vector<float> cellToPos(int i, int j, const GridGraph& graph)
+std::vector<float> cellToPos(int i, int j, const GridGraph &graph)
 {
     float x = (i + 0.5) * graph.meters_per_cell + graph.origin_x;
     float y = (j + 0.5) * graph.meters_per_cell + graph.origin_y;
@@ -125,49 +131,51 @@ std::vector<float> cellToPos(int i, int j, const GridGraph& graph)
     return std::vector<float>({x, y});
 }
 
-
-bool isCellInBounds(int i, int j, const GridGraph& graph)
+bool isCellInBounds(int i, int j, const GridGraph &graph)
 {
     return i >= 0 && j >= 0 && i < graph.width && j < graph.height;
 }
 
-
-bool isIdxOccupied(int idx, const GridGraph& graph)
+bool isIdxOccupied(int idx, const GridGraph &graph)
 {
     return graph.cell_odds[idx] >= graph.threshold;
 }
 
-
-bool isCellOccupied(int i, int j, const GridGraph& graph)
+bool isCellOccupied(int i, int j, const GridGraph &graph)
 {
     return isIdxOccupied(cellToIdx(i, j, graph), graph);
 }
 
-
-std::vector<int> findNeighbors(int idx, const GridGraph& graph)
+std::vector<int> findNeighbors(int idx, const GridGraph &graph)
 {
     std::vector<int> neighbors;
 
-    /**
-     * TODO (P3): Return a list of the indices of all the neighbors of the node
-     * at index idx. You should not include any cells that are outside of the
-     * bounds of the graph.
-     *
-     * HINT: The functions idxToCell(), cellToIdx(), and isCellInBounds() might
-     * come in handy.
-     */
+    Cell c = idxToCell(idx, graph);
+
+    // Use ONLY 4-connected neighbors
+    int di[4] = {0, 1, 0, -1};
+    int dj[4] = {1, 0, -1, 0};
+
+    for (int k = 0; k < 4; k++)
+    {
+        int ni = c.i + di[k];
+        int nj = c.j + dj[k];
+
+        if (isCellInBounds(ni, nj, graph))
+        {
+            neighbors.push_back(cellToIdx(ni, nj, graph));
+        }
+    }
 
     return neighbors;
 }
 
-
-bool checkCollisionFast(int idx, const GridGraph& graph)
+bool checkCollisionFast(int idx, const GridGraph &graph)
 {
     return graph.obstacle_distances[idx] * graph.meters_per_cell <= graph.collision_radius;
 }
 
-
-bool checkCollision(int idx, const GridGraph& graph)
+bool checkCollision(int idx, const GridGraph &graph)
 {
     // Check if this cell is in collision.
     if (isIdxOccupied(idx, graph))
@@ -203,26 +211,31 @@ bool checkCollision(int idx, const GridGraph& graph)
     return false;
 }
 
-
-int getParent(int idx, const GridGraph& graph)
+int getParent(int idx, const GridGraph &graph)
 {
     /**
      * TODO (P3): Return the parent of the node at idx.
      */
-    return -1;
+    if (idx < 0 || idx >= graph.nodes.size())
+    {
+        return -1;
+    }
+    return graph.nodes[idx].parent;
 }
 
-
-float getScore(int idx, const GridGraph& graph)
+float getScore(int idx, const GridGraph &graph)
 {
     /**
      * TODO (P3): Return the score of the node at idx.
      */
-    return HIGH;
+    if (idx < 0 || idx >= graph.nodes.size())
+    {
+        return HIGH;
+    }
+    return graph.nodes[idx].score;
 }
 
-
-int findLowestScore(const std::vector<int>& node_list, const GridGraph& graph)
+int findLowestScore(const std::vector<int> &node_list, const GridGraph &graph)
 {
     int min_idx = 0;
 
@@ -239,8 +252,7 @@ int findLowestScore(const std::vector<int>& node_list, const GridGraph& graph)
     return min_idx;
 }
 
-
-std::vector<Cell> tracePath(int goal, const GridGraph& graph)
+std::vector<Cell> tracePath(int goal, const GridGraph &graph)
 {
     std::vector<Cell> path;
     int current = goal;
@@ -248,7 +260,7 @@ std::vector<Cell> tracePath(int goal, const GridGraph& graph)
     {
         path.push_back(idxToCell(current, graph));
         current = getParent(current, graph);
-    } while (current >= 0);  // A cell with no parent has parent -1.
+    } while (current >= 0); // A cell with no parent has parent -1.
 
     // Since we built the path backwards, we need to reverse it.
     std::reverse(path.begin(), path.end());
