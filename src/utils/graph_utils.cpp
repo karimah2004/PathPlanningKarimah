@@ -152,7 +152,7 @@ std::vector<int> findNeighbors(int idx, const GridGraph &graph)
 
     Cell c = idxToCell(idx, graph);
 
-    // Use ONLY 4-connected neighbors
+    // troubleshooted because previously having robot too close to the border.
     int di[4] = {0, 1, 0, -1};
     int dj[4] = {1, 0, -1, 0};
 
