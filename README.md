@@ -1,5 +1,12 @@
 # Project 3: Path Planning (F23)
 
+
+## BFS Result
+![BFS Result](images/use_bfs.jpg)
+
+## DFS Result
+![DFS Result](images/use_dfs.jpg)
+
 Reference code for [Project 3 (Graph Search)](https://hellorob.org/projects/p3).
 
 This repository includes a server executable for visualization, which is
