@@ -1,3 +1,24 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# build directories
+build/
+*/build/
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+
+# compiled binaries
+*.o
+*.out
+*.exe
+
+# VSCode
+.vscode/
+
+
 # Python
 *.pyc
 __pycache__/
